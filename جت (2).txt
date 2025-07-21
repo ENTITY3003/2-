@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>پرواز جنگنده - ساخته شده توسط ENTiTy303</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            touch-action: none;
+        }
+        
+        #game {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        #player {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 50px;
+            z-index: 10;
+            transition: transform 0.1s ease;
+            filter: drop-shadow(0 0 10px #00ffcc);
+        }
+        
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            z-index: 100;
+            background: rgba(0,0,0,0.6);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            border: 2px solid #00ffcc;
+            box-shadow: 0 0 15px rgba(0,255,204,0.7);
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            z-index: 20;
+        }
+        
+        .btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 100, 200, 0.8);
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 30px;
+            user-select: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            transition: transform 0.1s, background 0.2s;
+            cursor: pointer;
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+            background: rgba(0, 80, 180, 0.9);
+        }
+        
+        #fire-btn {
+            background: linear-gradient(to bottom, #ff6b6b, #ff0000);
+        }
+        
+        #fire-btn:active {
+            background: linear-gradient(to bottom, #ff0000, #cc0000);
+        }
+        
+        .enemy {
+            position: absolute;
+            font-size: 40px;
+            z-index: 5;
+            transition: transform 0.2s;
+            animation: enemyPulse 2s infinite alternate;
+        }
+        
+        @keyframes enemyPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        
+        .bullet {
+            position: absolute;
+            font-size: 30px;
+            z-index: 7;
+            color: yellow;
+            text-shadow: 0 0 12px #ff0;
+            animation: bulletFlash 0.3s infinite alternate;
+        }
+        
+        @keyframes bulletFlash {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .explosion {
+            position: absolute;
+            font-size: 40px;
+            z-index: 8;
+            animation: explode 0.5s forwards;
+        }
+        
+        @keyframes explode {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+        
+        #start-screen, #game-over, #splash-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 300;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        #splash-screen {
+            background: linear-gradient(135deg, #000428, #004e92);
+            display: flex;
+        }
+        
+        #start-screen, #game-over {
+            background: rgba(0, 0, 50, 0.9);
+            display: none;
+        }
+        
+        #game-over {
+            display: none;
+        }
+        
+        h2 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            color: #00ffcc;
+            text-shadow: 0 0 15px #00ffcc;
+        }
+        
+        p {
+            font-size: 20px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        button {
+            background: linear-gradient(to bottom, #00a8ff, #007bff);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 22px;
+            border-radius: 40px;
+            margin-top: 40px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            background: linear-gradient(to bottom, #00c3ff, #0099ff);
+        }
+        
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            z-index: 1;
+            animation: cloudMove 25s linear infinite;
+        }
+        
+        @keyframes cloudMove {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100px); }
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            z-index: 1;
+            animation: twinkle 3s infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        
+        #music-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 150;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid #00ffcc;
+            box-shadow: 0 0 12px rgba(0,255,204,0.6);
+        }
+        
+        #music-icon {
+            font-size: 26px;
+            color: white;
+        }
+        
+        .visualizer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            z-index: 1;
+        }
+        
+        .bar {
+            width: 10px;
+            background: linear-gradient(to top, #00ffcc, #007bff);
+            border-radius: 5px 5px 0 0;
+            animation: barDance 0.6s infinite alternate;
+            animation-delay: calc(var(--i) * 0.05s);
+        }
+        
+        @keyframes barDance {
+            0% { height: 10%; }
+            100% { height: calc(70% + var(--height)); }
+        }
+        
+        .creator-signature {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            z-index: 50;
+            text-shadow: 0 0 8px rgba(0, 255, 204, 0.7);
+        }
+        
+        .splash-title {
+            font-size: 60px;
+            color: #00ffcc;
+            text-shadow: 0 0 20px #00ffcc;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+        
+        .splash-subtitle {
+            font-size: 30px;
+            color: white;
+            text-shadow: 0 0 15px white;
+            margin-top: 20px;
+            animation: fadeInOut 3s infinite alternate;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .loading-bar {
+            width: 300px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin-top: 40px;
+            overflow: hidden;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #00ffcc, #007bff);
+            border-radius: 4px;
+            animation: loading 3s forwards;
+        }
+        
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="score">امتیاز: 0</div>
+        <div id="player">✈️</div>
+        
+        <div id="controls">
+            <div class="btn" id="left-btn">←</div>
+            <div class="btn" id="fire-btn">🔥</div>
+            <div class="btn" id="right-btn">→</div>
+        </div>
+        
+        <!-- اسپلش اسکرین با امضای سازنده -->
+        <div id="splash-screen">
+            <div class="splash-title">پرواز جنگنده</div>
+            <div class="splash-subtitle">ساخته شده توسط</div>
+            <div class="splash-title" style="color: #ff00aa; text-shadow: 0 0 20px #ff00aa;">ENTiTy303</div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+        
+        <div id="start-screen">
+            <h2>پرواز جنگنده - نسخه ویژه</h2>
+            <p>با دکمه های چپ و راست حرکت کنید</p>
+            <p>با دکمه آتش به دشمنان شلیک کنید</p>
+            <p>از برخورد با دشمنان خودداری کنید!</p>
+            <button id="start-btn">شروع بازی</button>
+        </div>
+        
+        <div id="game-over">
+            <h2>بازی تمام شد!</h2>
+            <p>امتیاز نهایی: <span id="final-score">0</span></p>
+            <button id="restart-btn">شروع دوباره</button>
+        </div>
+        
+        <div id="music-control">
+            <div id="music-icon">🔊</div>
+        </div>
+        
+        <div class="creator-signature">طراحی و توسعه توسط ENTiTy303</div>
+    </div>
+
+    <script>
+        // ================
+        // عناصر اصلی بازی
+        // ================
+        const game = document.getElementById('game');
+        const player = document.getElementById('player');
+        const scoreElement = document.getElementById('score');
+        const splashScreen = document.getElementById('splash-screen');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreElement = document.getElementById('final-score');
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
+        const fireBtn = document.getElementById('fire-btn');
+        const musicControl = document.getElementById('music-control');
+        const musicIcon = document.getElementById('music-icon');
+        
+        // ================
+        // متغیرهای بازی
+        // ================
+        let gameActive = false;
+        let score = 0;
+        let playerX = 50; // موقعیت بازیکن (درصد)
+        let enemies = [];
+        let bullets = [];
+        let enemyInterval, gameInterval;
+        let musicPlaying = false;
+        
+        // موسیقی ورزشی انرژیزا
+        const bgMusic = new Audio();
+        bgMusic.loop = true;
+        
+        // لیست آهنگ‌های ورزشی انرژیزا
+        const musicTracks = [
+            "https://cdn.pixabay.com/download/audio/2021/08/09/audio_9b5d7fbaa7.mp3?filename=energetic-rock-142240.mp3",
+            "https://cdn.pixabay.com/download/audio/2022/03/19/audio_0d5c9d2d5c.mp3?filename=action-sport-trailer-112571.mp3",
+            "https://cdn.pixabay.com/download/audio/2021/10/29/audio_7dda2d4f92.mp3?filename=sports-action-11742.mp3"
+        ];
+        
+        // انتخاب تصادفی یک آهنگ
+        bgMusic.src = musicTracks[Math.floor(Math.random() * musicTracks.length)];
+        
+        // ایجاد ابرهای زمینه
+        function createBackground() {
+            for (let i = 0; i < 10; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.width = Math.random() * 120 + 60 + 'px';
+                cloud.style.height = Math.random() * 50 + 30 + 'px';
+                cloud.style.top = Math.random() * 40 + 10 + '%';
+                cloud.style.opacity = Math.random() * 0.5 + 0.3;
+                cloud.style.animationDuration = (Math.random() * 25 + 25) + 's';
+                cloud.style.left = Math.random() * 100 + '%';
+                game.appendChild(cloud);
+            }
+            
+            for (let i = 0; i < 40; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = Math.random() * 4 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.top = Math.random() * 100 + '%';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                game.appendChild(star);
+            }
+        }
+        
+        // ایجاد ویژوالایزر موسیقی
+        function createVisualizer() {
+            const visualizer = document.createElement('div');
+            visualizer.className = 'visualizer';
+            
+            for (let i = 0; i < 50; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.setProperty('--i', i);
+                bar.style.setProperty('--height', Math.random() * 40 + 'px');
+                bar.style.animationDuration = (Math.random() * 0.5 + 0.4) + 's';
+                visualizer.appendChild(bar);
+            }
+            
+            game.appendChild(visualizer);
+        }
+        
+        // ================
+        // توابع کنترل بازی
+        // ================
+        
+        // شروع بازی
+        function startGame() {
+            gameActive = true;
+            score = 0;
+            playerX = 50;
+            
+            scoreElement.textContent = 'امتیاز: ' + score;
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            player.style.left = '50%';
+            
+            // حذف تمام دشمنان و گلوله های قبلی
+            document.querySelectorAll('.enemy, .bullet, .explosion').forEach(el => el.remove());
+            enemies = [];
+            bullets = [];
+            
+            // ایجاد زمینه
+            document.querySelectorAll('.cloud, .star, .visualizer').forEach(el => el.remove());
+            createBackground();
+            createVisualizer();
+            
+            // شروع تولید دشمن
+            if (enemyInterval) clearInterval(enemyInterval);
+            enemyInterval = setInterval(createEnemy, 1600); // سرعت کمتری برای دشمنان
+            
+            // شروع به روزرسانی بازی
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(updateGame, 30);
+            
+            // پخش موسیقی
+            if (musicPlaying) {
+                bgMusic.play();
+            }
+        }
+        
+        // پایان بازی
+        function endGame() {
+            gameActive = false;
+            finalScoreElement.textContent = score;
+            gameOverScreen.style.display = 'flex';
+            clearInterval(enemyInterval);
+            clearInterval(gameInterval);
+            
+            // توقف موسیقی
+            bgMusic.pause();
+            
+            // انیمیشن انفجار برای بازیکن
+            const playerRect = player.getBoundingClientRect();
+            createExplosion(playerRect.left + playerRect.width/2, playerRect.top + playerRect.height/2);
+        }
+        
+        // ایجاد دشمن جدید
+        function createEnemy() {
+            if (!gameActive) return;
+            
+            const enemy = document.createElement('div');
+            enemy.className = 'enemy';
+            enemy.textContent = '🛸';
+            const enemyX = Math.random() * (window.innerWidth - 50) + 25;
+            enemy.style.left = enemyX + 'px';
+            enemy.style.top = '-50px';
+            
+            game.appendChild(enemy);
+            enemies.push({
+                element: enemy,
+                x: enemyX,
+                y: -50
+            });
+        }
+        
+        // شلیک گلوله
+        function fireBullet() {
+            if (!gameActive) return;
+            
+            const bullet = document.createElement('div');
+            bullet.className = 'bullet';
+            bullet.textContent = '↑';
+            
+            const playerRect = player.getBoundingClientRect();
+            const bulletX = playerRect.left + playerRect.width/2;
+            const bulletY = playerRect.top;
+            
+            bullet.style.left = bulletX + 'px';
+            bullet.style.top = bulletY + 'px';
+            
+            game.appendChild(bullet);
+            bullets.push({
+                element: bullet,
+                x: bulletX,
+                y: bulletY
+            });
+            
+            // افکت شلیک
+            player.style.transform = 'translateX(-50%) scale(1.1)';
+            setTimeout(() => {
+                player.style.transform = 'translateX(-50%) scale(1)';
+            }, 100);
+        }
+        
+        // ایجاد انفجار
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.textContent = '💥';
+            explosion.style.left = x + 'px';
+            explosion.style.top = y + 'px';
+            game.appendChild(explosion);
+            
+            setTimeout(() => {
+                explosion.remove();
+            }, 500);
+        }
+        
+        // تشخیص برخورد
+        function isColliding(rect1, rect2) {
+            return rect1.left < rect2.right && 
+                   rect1.right > rect2.left && 
+                   rect1.top < rect2.bottom && 
+                   rect1.bottom > rect2.top;
+        }
+        
+        // به روزرسانی موقعیت عناصر
+        function updateGame() {
+            if (!gameActive) return;
+            
+            // حرکت دشمنان به پایین با سرعت کاهش یافته
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const enemyElement = enemy.element;
+                
+                // سرعت دشمنان کاهش یافت (از 3 به 2)
+                enemy.y += 2;
+                enemyElement.style.top = enemy.y + 'px';
+                
+                // دریافت مختصات فعلی برای تشخیص برخورد
+                const enemyRect = enemyElement.getBoundingClientRect();
+                
+                // بررسی برخورد با بازیکن
+                const playerRect = player.getBoundingClientRect();
+                if (isColliding(playerRect, enemyRect)) {
+                    endGame();
+                    return;
+                }
+                
+                // حذف دشمنان خارج شده
+                if (enemy.y > window.innerHeight) {
+                    enemyElement.remove();
+                    enemies.splice(i, 1);
+                }
+            }
+            
+            // حرکت گلوله ها به سمت بالا
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                const bulletElement = bullet.element;
+                
+                // حرکت گلوله به سمت بالا
+                bullet.y -= 10;
+                bulletElement.style.top = bullet.y + 'px';
+                
+                // دریافت مختصات فعلی گلوله
+                const bulletRect = bulletElement.getBoundingClientRect();
+                
+                // بررسی برخورد گلوله با دشمن
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const enemy = enemies[j];
+                    const enemyRect = enemy.element.getBoundingClientRect();
+                    
+                    if (isColliding(bulletRect, enemyRect)) {
+                        // ایجاد انفجار در محل برخورد
+                        createExplosion(
+                            (bulletRect.left + bulletRect.right) / 2,
+                            (bulletRect.top + bulletRect.bottom) / 2
+                        );
+                        
+                        // حذف دشمن و گلوله
+                        enemy.element.remove();
+                        enemies.splice(j, 1);
+                        
+                        bulletElement.remove();
+                        bullets.splice(i, 1);
+                        
+                        // افزایش امتیاز
+                        score += 100;
+                        scoreElement.textContent = 'امتیاز: ' + score;
+                        break;
+                    }
+                }
+                
+                // حذف گلوله های خارج شده
+                if (bullet.y < -50) {
+                    bulletElement.remove();
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+        
+        // ================
+        // رویدادهای کنترل
+        // ================
+        
+        // کنترل موسیقی
+        musicControl.addEventListener('click', () => {
+            if (musicPlaying) {
+                bgMusic.pause();
+                musicIcon.textContent = '🔇';
+                musicPlaying = false;
+            } else {
+                bgMusic.play().catch(e => console.log("لطفا تعامل داشته باشید تا موسیقی پخش شود"));
+                musicIcon.textContent = '🔊';
+                musicPlaying = true;
+            }
+        });
+        
+        // شروع بازی
+        document.getElementById('start-btn').addEventListener('click', startGame);
+        document.getElementById('restart-btn').addEventListener('click', startGame);
+        
+        // حرکت به چپ
+        leftBtn.addEventListener('click', function() {
+            if (gameActive) {
+                playerX = Math.max(10, playerX - 8);
+                player.style.left = playerX + '%';
+            }
+        });
+        
+        // حرکت به راست
+        rightBtn.addEventListener('click', function() {
+            if (gameActive) {
+                playerX = Math.min(90, playerX + 8);
+                player.style.left = playerX + '%';
+            }
+        });
+        
+        // شلیک
+        fireBtn.addEventListener('click', function() {
+            if (gameActive) {
+                fireBullet();
+            }
+        });
+        
+        // کنترل لمسی برای دکمه ها
+        leftBtn.ontouchstart = function() {
+            if (gameActive) {
+                playerX = Math.max(10, playerX - 8);
+                player.style.left = playerX + '%';
+            }
+        };
+        
+        rightBtn.ontouchstart = function() {
+            if (gameActive) {
+                playerX = Math.min(90, playerX + 8);
+                player.style.left = playerX + '%';
+            }
+        };
+        
+        fireBtn.ontouchstart = function() {
+            if (gameActive) {
+                fireBullet();
+            }
+        };
+        
+        // کنترل صفحه کلید
+        document.addEventListener('keydown', function(e) {
+            if (!gameActive) return;
+            
+            if (e.key === 'ArrowLeft') {
+                playerX = Math.max(10, playerX - 8);
+                player.style.left = playerX + '%';
+            } else if (e.key === 'ArrowRight') {
+                playerX = Math.min(90, playerX + 8);
+                player.style.left = playerX + '%';
+            } else if (e.key === ' ' || e.key === 'Spacebar') {
+                fireBullet();
+            }
+        });
+        
+        // اسپلش اسکرین و انتقال به صفحه اصلی
+        setTimeout(() => {
+            splashScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+        }, 3000);
+    </script>
+</body>
+</html>
